@@ -1,0 +1,20 @@
+<div [class]="containerClasses()" (click)="onClick()">
+  @if (faceDown()) {
+    <div class="absolute inset-0 rounded-lg overflow-hidden flex items-center justify-center">
+      <div class="card-back-pattern absolute inset-0"></div>
+      <span class="relative text-indigo-300 text-2xl opacity-60 select-none">♠</span>
+    </div>
+  } @else {
+    <span class="absolute top-1 left-1.5" [class]="cornerTextClasses()">
+      {{ value() }}
+    </span>
+
+    <span [class]="centerTextClasses()">
+      {{ value() }}
+    </span>
+
+    <span class="absolute bottom-1 right-1.5 rotate-180" [class]="cornerTextClasses()">
+      {{ value() }}
+    </span>
+  }
+</div>

@@ -1,0 +1,49 @@
+@if (stats()) {
+  <div class="bg-white rounded-2xl shadow-md p-6 space-y-6">
+
+    @if (stats()!.consensus) {
+      <div class="bg-green-100 text-green-800 text-center rounded-xl py-3 px-4 text-lg font-semibold">
+        Consensus! 🎉
+      </div>
+    }
+
+    <div class="flex justify-around">
+      <div class="text-center">
+        <p class="text-sm text-gray-500 uppercase tracking-wide mb-1">Average</p>
+        <p class="text-4xl font-bold text-gray-800">
+          @if (stats()!.average !== null) {
+            {{ stats()!.average | number: '1.1-1' }}
+          } @else {
+            —
+          }
+        </p>
+      </div>
+      <div class="text-center">
+        <p class="text-sm text-gray-500 uppercase tracking-wide mb-1">Median</p>
+        <p class="text-4xl font-bold text-gray-800">
+          @if (stats()!.median !== null) {
+            {{ stats()!.median }}
+          } @else {
+            —
+          }
+        </p>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      @for (item of stats()!.distribution; track item.value) {
+        <div class="flex items-center gap-3">
+          <span class="w-8 text-right text-sm font-medium text-gray-600 shrink-0">{{ item.value }}</span>
+          <div class="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+            <div
+              class="bg-indigo-500 h-full rounded-full transition-all duration-300"
+              [style.width.%]="(item.count / maxCount()) * 100"
+            ></div>
+          </div>
+          <span class="w-6 text-sm font-semibold text-gray-700 shrink-0">{{ item.count }}</span>
+        </div>
+      }
+    </div>
+
+  </div>
+}

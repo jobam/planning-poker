@@ -1,0 +1,110 @@
+.invite-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.invite-dialog-card {
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 28rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.invite-dialog-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.invite-dialog-url-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.invite-dialog-url-input {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  color: #374151;
+  background-color: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.invite-dialog-url-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.invite-dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.invite-dialog-btn-copy {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  background-color: #4f46e5;
+  color: #ffffff;
+  transition: background-color 0.15s ease;
+  min-width: 7rem;
+}
+
+.invite-dialog-btn-copy:hover {
+  background-color: #4338ca;
+}
+
+.invite-dialog-btn-copy.invite-dialog-btn-copied {
+  background-color: #16a34a;
+}
+
+.invite-dialog-btn-copy.invite-dialog-btn-copied:hover {
+  background-color: #15803d;
+}
+
+.invite-dialog-btn-close {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.invite-dialog-btn-close:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

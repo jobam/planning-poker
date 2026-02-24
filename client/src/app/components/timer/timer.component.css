@@ -1,0 +1,96 @@
+.progress-ring {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--ring-color, #6b7280) calc(var(--progress, 0%) * 1%),
+    #374151 calc(var(--progress, 0%) * 1%)
+  );
+  background: conic-gradient(
+    var(--ring-color, #6b7280) var(--progress, 0%),
+    #374151 var(--progress, 0%)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --ring-color: #6b7280;
+}
+
+.progress-ring::before {
+  content: '';
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #1f2937;
+}
+
+.progress-ring.state-running {
+  --ring-color: #4ade80;
+}
+
+.progress-ring.state-paused {
+  --ring-color: #facc15;
+}
+
+.progress-ring.state-complete {
+  --ring-color: #f87171;
+  animation: pulse-ring 1s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  padding: 0;
+  min-width: 32px;
+}
+
+.btn-green {
+  background-color: #166534;
+  color: #4ade80;
+}
+
+.btn-green:hover {
+  background-color: #15803d;
+}
+
+.btn-yellow {
+  background-color: #713f12;
+  color: #facc15;
+}
+
+.btn-yellow:hover {
+  background-color: #a16207;
+}
+
+.btn-neutral {
+  background-color: #374151;
+  color: #d1d5db;
+}
+
+.btn-neutral:hover {
+  background-color: #4b5563;
+}
+
+.btn-disabled {
+  background-color: #1f2937;
+  color: #4b5563;
+  cursor: not-allowed;
+  opacity: 0.5;
+}

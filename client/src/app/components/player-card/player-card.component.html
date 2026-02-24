@@ -1,0 +1,49 @@
+<div class="flex flex-col items-center gap-2">
+
+  <!-- Avatar -->
+  <div class="relative">
+    <div
+      class="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg select-none"
+      [class.bg-indigo-600]="player().role === 'facilitator'"
+      [class.bg-gray-400]="player().role === 'player'"
+      [class.bg-gray-300]="player().role === 'spectator'"
+    >
+      {{ initials() }}
+    </div>
+
+    @if (player().role === 'facilitator') {
+      <span class="absolute -top-1 -right-1 text-sm leading-none">👑</span>
+    }
+  </div>
+
+  <!-- Name -->
+  <span class="text-sm font-medium text-gray-700 max-w-[6rem] truncate text-center">
+    {{ player().name }}
+  </span>
+
+  <!-- Poker card -->
+  @switch (player().role) {
+    @case ('spectator') {
+      <div class="w-10 h-14 rounded border-2 border-gray-300 flex items-center justify-center text-gray-400 text-lg bg-white">
+        👁
+      </div>
+    }
+    @default {
+      @if (!player().hasVoted) {
+        <!-- Not voted: outline card -->
+        <div class="w-10 h-14 rounded border-2 border-dashed border-gray-300 bg-white"></div>
+      } @else if (revealed()) {
+        <!-- Revealed: show vote value -->
+        <div class="w-10 h-14 rounded border-2 border-indigo-500 flex items-center justify-center bg-indigo-50 text-indigo-700 font-bold text-sm shadow-sm">
+          {{ player().vote }}
+        </div>
+      } @else {
+        <!-- Voted but not revealed: face-down card with checkmark -->
+        <div class="w-10 h-14 rounded border-2 border-green-500 flex items-center justify-center bg-green-50 text-green-600 font-bold text-base shadow-sm">
+          ✓
+        </div>
+      }
+    }
+  }
+
+</div>

@@ -1,0 +1,29 @@
+@if (isOpen()) {
+  <div class="invite-dialog-overlay" (click)="closed.emit()">
+    <div class="invite-dialog-card" (click)="$event.stopPropagation()">
+      <h2 class="invite-dialog-title">Invite Players</h2>
+
+      <div class="invite-dialog-url-row">
+        <input
+          class="invite-dialog-url-input"
+          type="text"
+          [value]="gameUrl()"
+          readonly
+        />
+      </div>
+
+      <div class="invite-dialog-actions">
+        <button
+          class="invite-dialog-btn-copy"
+          [class.invite-dialog-btn-copied]="copied()"
+          (click)="copyToClipboard()"
+        >
+          {{ copied() ? 'Copied! ✓' : 'Copy Link' }}
+        </button>
+        <button class="invite-dialog-btn-close" (click)="closed.emit()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,67 @@
+<div class="flex items-center gap-3 p-2">
+  <!-- Circular progress + time display -->
+  <div class="relative flex items-center justify-center">
+    <div
+      class="progress-ring"
+      [class.state-running]="isRunning()"
+      [class.state-paused]="!isRunning() && !isComplete() && timeLeft() < totalTime()"
+      [class.state-complete]="isComplete()"
+      [style.--progress]="progress() + '%'"
+    ></div>
+    <span
+      class="absolute font-mono font-bold text-sm leading-none"
+      [class.text-green-400]="isRunning()"
+      [class.text-yellow-400]="!isRunning() && !isComplete() && timeLeft() < totalTime()"
+      [class.text-red-400]="isComplete()"
+      [class.text-white]="!isRunning() && !isComplete() && timeLeft() === totalTime()"
+    >
+      {{ formattedTime() }}
+    </span>
+  </div>
+
+  <!-- Start / Pause button -->
+  @if (!isRunning()) {
+    <button
+      class="btn-icon"
+      [class.btn-green]="!isComplete()"
+      [class.btn-disabled]="isComplete()"
+      [disabled]="isComplete()"
+      (click)="start()"
+      title="Start"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M8 5v14l11-7z"/>
+      </svg>
+    </button>
+  } @else {
+    <button
+      class="btn-icon btn-yellow"
+      (click)="pause()"
+      title="Pause"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+      </svg>
+    </button>
+  }
+
+  <!-- +30s button -->
+  <button
+    class="btn-icon btn-neutral"
+    (click)="addTime(30)"
+    title="+30 seconds"
+  >
+    <span class="text-xs font-semibold leading-none">+30s</span>
+  </button>
+
+  <!-- Reset button -->
+  <button
+    class="btn-icon btn-neutral"
+    (click)="reset()"
+    title="Reset"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+    </svg>
+  </button>
+</div>

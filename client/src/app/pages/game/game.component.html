@@ -1,0 +1,100 @@
+@if (!joined()) {
+  <div class="join-overlay">
+    <div class="join-card">
+      <h2 class="join-title">Join Game</h2>
+      @if (error()) {
+        <p class="join-error">{{ error() }}</p>
+      }
+      <div class="join-form">
+        <input
+          class="join-input"
+          type="text"
+          placeholder="Your name"
+          [ngModel]="playerName()"
+          (ngModelChange)="playerName.set($event)"
+          (keyup.enter)="joinGame()"
+        />
+        <button class="join-btn" (click)="joinGame()">Join</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (joined()) {
+  <div class="game-room">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <span class="game-name">{{ game()?.name }}</span>
+      </div>
+      <div class="top-bar-center">
+        <input
+          class="topic-input"
+          type="text"
+          placeholder="Enter topic..."
+          [value]="game()?.currentTopic ?? ''"
+          (change)="updateTopic($any($event.target).value)"
+        />
+      </div>
+      <div class="top-bar-right">
+        <span class="player-count">{{ players().length }} player{{ players().length !== 1 ? 's' : '' }}</span>
+        <button class="invite-btn" (click)="openInviteDialog()">Invite</button>
+      </div>
+    </div>
+
+    <!-- Player area -->
+    <div class="player-area">
+      @for (player of players(); track player.id) {
+        <app-player-card [player]="player" [revealed]="isRevealed()" />
+      }
+    </div>
+
+    <!-- Results area -->
+    @if (isRevealed()) {
+      <div class="results-area">
+        <app-voting-results [stats]="voteStats()" />
+      </div>
+    }
+
+    <!-- Controls bar -->
+    <div class="controls-bar">
+      <div class="controls-left">
+        @if (!isRevealed()) {
+          <button class="btn-reveal" (click)="revealVotes()">Reveal Votes</button>
+        } @else {
+          <button class="btn-new-round" (click)="resetRound()">New Round</button>
+        }
+      </div>
+      <div class="controls-center">
+        <app-timer />
+      </div>
+      <div class="controls-right">
+        <button
+          class="btn-spectator"
+          [class.active]="currentPlayer()?.role === 'spectator'"
+          (click)="toggleSpectator()"
+        >
+          {{ currentPlayer()?.role === 'spectator' ? 'Spectating' : 'Spectator' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Card selection -->
+    <div class="card-selection">
+      <div class="card-row">
+        @for (value of game()?.deck?.values ?? []; track value) {
+          <app-poker-card
+            [value]="value"
+            [selected]="selectedCard() === value"
+            [disabled]="isRevealed() || currentPlayer()?.role === 'spectator'"
+            (cardClick)="selectCard(value)"
+          />
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (showInviteDialog()) {
+  <app-invite-dialog [gameId]="gameId" [isOpen]="true" (closed)="showInviteDialog.set(false)" />
+}

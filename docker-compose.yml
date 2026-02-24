@@ -1,0 +1,10 @@
+services:
+  planning-poker:
+    image: ghcr.io/jobam/planning-poker:latest
+    container_name: planning-poker
+    restart: unless-stopped
+    ports:
+      - "4218:3000"
+    environment:
+      - PORT=3000
+      - CORS_ORIGIN=https://planning-poker.mentis-consulting.io
