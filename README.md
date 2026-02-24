@@ -57,4 +57,4 @@ docker compose up -d
 
 ## License
 
-MIT
+[PolyForm-Noncommercial](https://github.com/polyformproject/polyform-licenses/blob/1.0.0/PolyForm-Noncommercial-1.0.0.md)
