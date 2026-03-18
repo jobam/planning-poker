@@ -14,6 +14,29 @@
           (ngModelChange)="playerName.set($event)"
           (keyup.enter)="joinGame()"
         />
+        @if (availableRoles().length > 0) {
+          <div class="role-selection">
+            <label class="role-label">Choose your role</label>
+            <div class="role-options">
+              @for (role of availableRoles(); track role) {
+                <button
+                  class="role-option"
+                  [class.selected]="selectedRole() === role"
+                  (click)="selectedRole.set(role)"
+                >
+                  {{ role }}
+                </button>
+              }
+              <button
+                class="role-option observer"
+                [class.selected]="selectedRole() === 'observer'"
+                (click)="selectedRole.set('observer')"
+              >
+                Observer
+              </button>
+            </div>
+          </div>
+        }
         <button class="join-btn" (click)="joinGame()">Join</button>
       </div>
     </div>
