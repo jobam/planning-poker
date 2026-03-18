@@ -42,6 +42,42 @@
           </select>
         </div>
 
+        <!-- Roles -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Roles <span class="text-gray-400 font-normal">(optional)</span></label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. Backend, Frontend, PO..."
+              [ngModel]="roleInput()"
+              (ngModelChange)="roleInput.set($event)"
+              (keyup.enter)="addRole()"
+              class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+            />
+            <button
+              type="button"
+              (click)="addRole()"
+              class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition cursor-pointer"
+            >
+              Add
+            </button>
+          </div>
+          @if (roles().length > 0) {
+            <div class="flex flex-wrap gap-2 mt-2">
+              @for (role of roles(); track role) {
+                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium border border-indigo-100">
+                  {{ role }}
+                  <button
+                    type="button"
+                    (click)="removeRole(role)"
+                    class="text-indigo-400 hover:text-indigo-700 font-bold cursor-pointer"
+                  >&times;</button>
+                </span>
+              }
+            </div>
+          }
+        </div>
+
         <!-- Deck Preview -->
         <div>
           <p class="text-sm font-medium text-gray-700 mb-2">Card Values</p>

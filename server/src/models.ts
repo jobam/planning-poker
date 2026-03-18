@@ -29,6 +29,7 @@ export interface Player {
   id: string;
   name: string;
   role: PlayerRole;
+  customRole: string | null;
   vote: string | null;
   hasVoted: boolean;
 }
@@ -38,6 +39,7 @@ export interface GameState {
   name: string;
   deck: CardDeck;
   deckType: string;
+  roles: string[];
   players: Map<string, Player>;
   currentTopic: string;
   status: GameStatus;
@@ -49,6 +51,7 @@ export interface GameStateDTO {
   name: string;
   deck: CardDeck;
   deckType: string;
+  roles: string[];
   players: PlayerDTO[];
   currentTopic: string;
   status: GameStatus;
@@ -58,6 +61,7 @@ export interface PlayerDTO {
   id: string;
   name: string;
   role: PlayerRole;
+  customRole: string | null;
   vote: string | null;
   hasVoted: boolean;
 }
@@ -69,6 +73,7 @@ export function toGameDTO(game: GameState): GameStateDTO {
     name: game.name,
     deck: game.deck,
     deckType: game.deckType,
+    roles: game.roles,
     players,
     currentTopic: game.currentTopic,
     status: game.status,
@@ -80,6 +85,7 @@ export function toPlayerDTO(player: Player, gameStatus: GameStatus): PlayerDTO {
     id: player.id,
     name: player.name,
     role: player.role,
+    customRole: player.customRole,
     vote: gameStatus === 'revealed' ? player.vote : null,
     hasVoted: player.hasVoted,
   };

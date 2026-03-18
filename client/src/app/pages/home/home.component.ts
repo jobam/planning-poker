@@ -14,15 +14,29 @@ export class HomeComponent {
   gameName = signal('');
   selectedDeck = signal('fibonacci');
   isCreating = signal(false);
+  roleInput = signal('');
+  roles = signal<string[]>([]);
   deckKeys = Object.keys(DECKS);
   decks = DECKS;
 
   constructor(private gameService: GameService, private router: Router) {}
 
+  addRole(): void {
+    const role = this.roleInput().trim();
+    if (role && !this.roles().includes(role)) {
+      this.roles.update((r) => [...r, role]);
+      this.roleInput.set('');
+    }
+  }
+
+  removeRole(role: string): void {
+    this.roles.update((r) => r.filter((v) => v !== role));
+  }
+
   async createGame(): Promise<void> {
     this.isCreating.set(true);
     try {
-      const gameId = await this.gameService.createGame(this.gameName(), this.selectedDeck());
+      const gameId = await this.gameService.createGame(this.gameName(), this.selectedDeck(), this.roles());
       this.router.navigate([`/game/${gameId}`]);
     } finally {
       this.isCreating.set(false);

@@ -76,12 +76,12 @@ export class GameService implements OnDestroy {
 
   constructor(private socketService: SocketService) {}
 
-  async createGame(name: string, deckType: string): Promise<string> {
+  async createGame(name: string, deckType: string, roles: string[] = []): Promise<string> {
     this.socketService.connect();
     const response = await this.socketService.emitWithAck<
-      { name: string; deckType: string },
+      { name: string; deckType: string; roles: string[] },
       { gameId?: string; error?: string }
-    >('create-game', { name, deckType });
+    >('create-game', { name, deckType, roles });
 
     if (response.error || !response.gameId) {
       throw new Error(response.error ?? 'Failed to create game');
@@ -90,14 +90,28 @@ export class GameService implements OnDestroy {
     return response.gameId;
   }
 
-  async joinGame(gameId: string, playerName: string): Promise<void> {
+  async getGameInfo(gameId: string): Promise<{ roles: string[]; name: string }> {
+    this.socketService.connect();
+    const response = await this.socketService.emitWithAck<
+      { gameId: string },
+      { roles?: string[]; name?: string; error?: string }
+    >('get-game-info', { gameId });
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    return { roles: response.roles ?? [], name: response.name ?? '' };
+  }
+
+  async joinGame(gameId: string, playerName: string, customRole: string | null = null): Promise<void> {
     this.socketService.connect();
     this.listenToEvents();
 
     const response = await this.socketService.emitWithAck<
-      { gameId: string; playerName: string },
+      { gameId: string; playerName: string; customRole?: string },
       { game?: GameState; playerId?: string; error?: string }
-    >('join-game', { gameId, playerName });
+    >('join-game', { gameId, playerName, ...(customRole ? { customRole } : {}) });
 
     if (response.error) {
       throw new Error(response.error);

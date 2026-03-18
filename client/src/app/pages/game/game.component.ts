@@ -28,6 +28,8 @@ export class GameComponent implements OnInit, OnDestroy {
 
   gameId = '';
   playerName = signal(localStorage.getItem('pp_player_name') ?? '');
+  selectedRole = signal<string | null>(null);
+  availableRoles = signal<string[]>([]);
   showInviteDialog = signal(false);
   selectedCard = signal<string | null>(null);
   joined = signal(false);
@@ -41,8 +43,14 @@ export class GameComponent implements OnInit, OnDestroy {
   voteStats = this.gameService.voteStats;
   currentPlayer = this.gameService.currentPlayer;
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.gameId = this.route.snapshot.paramMap.get('id') ?? '';
+    try {
+      const info = await this.gameService.getGameInfo(this.gameId);
+      this.availableRoles.set(info.roles);
+    } catch {
+      // Game may not exist yet, will show error on join
+    }
   }
 
   ngOnDestroy(): void {
@@ -56,7 +64,7 @@ export class GameComponent implements OnInit, OnDestroy {
     localStorage.setItem('pp_player_name', name);
 
     try {
-      await this.gameService.joinGame(this.gameId, name);
+      await this.gameService.joinGame(this.gameId, name, this.selectedRole());
       this.joined.set(true);
       this.error.set('');
     } catch (err: unknown) {

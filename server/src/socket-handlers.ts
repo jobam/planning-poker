@@ -5,6 +5,8 @@ import { toGameDTO, toPlayerDTO } from './models.js';
 const MAX_NAME_LENGTH = 50;
 const MAX_GAME_NAME_LENGTH = 100;
 const MAX_TOPIC_LENGTH = 200;
+const MAX_ROLE_LENGTH = 30;
+const MAX_ROLES = 20;
 
 function sanitizeString(str: unknown, maxLen: number): string | null {
   if (typeof str !== 'string') return null;
@@ -17,14 +19,29 @@ export function registerSocketHandlers(io: Server, gameManager: GameManager): vo
   const playerGameMap = new Map<string, string>();
 
   io.on('connection', (socket: Socket) => {
-    socket.on('create-game', (data: { name: string; deckType: string }, callback) => {
+    socket.on('create-game', (data: { name: string; deckType: string; roles?: string[] }, callback) => {
       const name = sanitizeString(data.name, MAX_GAME_NAME_LENGTH) ?? 'Planning Poker';
       const deckType = typeof data.deckType === 'string' ? data.deckType : 'fibonacci';
-      const game = gameManager.createGame(name, deckType);
+      const roles = Array.isArray(data.roles)
+        ? data.roles
+            .map((r) => sanitizeString(r, MAX_ROLE_LENGTH))
+            .filter((r): r is string => r !== null)
+            .slice(0, MAX_ROLES)
+        : [];
+      const game = gameManager.createGame(name, deckType, roles);
       callback({ gameId: game.id });
     });
 
-    socket.on('join-game', (data: { gameId: string; playerName: string }, callback) => {
+    socket.on('get-game-info', (data: { gameId: string }, callback) => {
+      const game = gameManager.getGame(data.gameId);
+      if (!game) {
+        callback({ error: 'Game not found' });
+        return;
+      }
+      callback({ roles: game.roles, name: game.name });
+    });
+
+    socket.on('join-game', (data: { gameId: string; playerName: string; customRole?: string }, callback) => {
       const playerName = sanitizeString(data.playerName, MAX_NAME_LENGTH);
       if (!playerName) {
         callback({ error: 'Invalid player name' });
@@ -37,7 +54,8 @@ export function registerSocketHandlers(io: Server, gameManager: GameManager): vo
         return;
       }
 
-      const player = gameManager.addPlayer(data.gameId, playerName, socket.id);
+      const customRole = data.customRole ? sanitizeString(data.customRole, MAX_ROLE_LENGTH) : null;
+      const player = gameManager.addPlayer(data.gameId, playerName, socket.id, customRole);
       if (!player) {
         callback({ error: 'Could not join game' });
         return;

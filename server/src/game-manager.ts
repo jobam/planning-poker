@@ -4,7 +4,7 @@ import { DECKS, GameState, Player, toGameDTO, type GameStateDTO } from './models
 export class GameManager {
   private games = new Map<string, GameState>();
 
-  createGame(name: string, deckType: string): GameState {
+  createGame(name: string, deckType: string, roles: string[] = []): GameState {
     const deck = DECKS[deckType] ?? DECKS['fibonacci'];
     const id = uuidv4().slice(0, 8);
 
@@ -13,6 +13,7 @@ export class GameManager {
       name: name || 'Planning Poker',
       deck,
       deckType,
+      roles,
       players: new Map(),
       currentTopic: '',
       status: 'voting',
@@ -33,15 +34,17 @@ export class GameManager {
     return toGameDTO(game);
   }
 
-  addPlayer(gameId: string, playerName: string, socketId: string): Player | undefined {
+  addPlayer(gameId: string, playerName: string, socketId: string, customRole: string | null = null): Player | undefined {
     const game = this.games.get(gameId);
     if (!game) return undefined;
 
     const isFirstPlayer = game.players.size === 0;
+    const isObserver = customRole === 'observer';
     const player: Player = {
       id: socketId,
       name: playerName,
-      role: isFirstPlayer ? 'facilitator' : 'player',
+      role: isFirstPlayer ? 'facilitator' : isObserver ? 'spectator' : 'player',
+      customRole: isObserver ? null : customRole,
       vote: null,
       hasVoted: false,
     };

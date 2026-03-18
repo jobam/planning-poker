@@ -21,6 +21,18 @@
     {{ player().name }}
   </span>
 
+  <!-- Custom Role -->
+  @if (player().customRole) {
+    <span class="text-xs font-medium text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-full truncate max-w-[6rem]">
+      {{ player().customRole }}
+    </span>
+  }
+  @if (player().role === 'spectator') {
+    <span class="text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+      Observer
+    </span>
+  }
+
   <!-- Poker card -->
   @switch (player().role) {
     @case ('spectator') {
