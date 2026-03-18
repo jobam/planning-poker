@@ -1,10 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DECKS, GameState, Player, toGameDTO, type GameStateDTO } from './models.js';
 
+interface DisconnectedPlayer {
+  player: Player;
+  gameId: string;
+  timer: ReturnType<typeof setTimeout>;
+}
+
 export class GameManager {
   private games = new Map<string, GameState>();
+  private disconnectedPlayers = new Map<string, DisconnectedPlayer>();
 
-  createGame(name: string, deckType: string): GameState {
+  createGame(name: string, deckType: string, roles: string[] = []): GameState {
     const deck = DECKS[deckType] ?? DECKS['fibonacci'];
     const id = uuidv4().slice(0, 8);
 
@@ -13,6 +20,7 @@ export class GameManager {
       name: name || 'Planning Poker',
       deck,
       deckType,
+      roles,
       players: new Map(),
       currentTopic: '',
       status: 'voting',
@@ -27,21 +35,27 @@ export class GameManager {
     return this.games.get(gameId);
   }
 
+  removeGame(gameId: string): void {
+    this.games.delete(gameId);
+  }
+
   getGameDTO(gameId: string): GameStateDTO | undefined {
     const game = this.games.get(gameId);
     if (!game) return undefined;
     return toGameDTO(game);
   }
 
-  addPlayer(gameId: string, playerName: string, socketId: string): Player | undefined {
+  addPlayer(gameId: string, playerName: string, socketId: string, customRole: string | null = null): Player | undefined {
     const game = this.games.get(gameId);
     if (!game) return undefined;
 
     const isFirstPlayer = game.players.size === 0;
+    const isObserver = customRole === 'observer';
     const player: Player = {
       id: socketId,
       name: playerName,
-      role: isFirstPlayer ? 'facilitator' : 'player',
+      role: isFirstPlayer ? 'facilitator' : isObserver ? 'spectator' : 'player',
+      customRole: isObserver ? null : customRole,
       vote: null,
       hasVoted: false,
     };
@@ -136,5 +150,49 @@ export class GameManager {
 
     game.currentTopic = topic;
     return true;
+  }
+
+  markDisconnected(gameId: string, playerId: string, onExpire: () => void, timeoutMs = 45_000): void {
+    const game = this.games.get(gameId);
+    if (!game) return;
+
+    const player = game.players.get(playerId);
+    if (!player) return;
+
+    const key = `${gameId}:${player.name}`;
+
+    // Store player data and remove from active game
+    const timer = setTimeout(onExpire, timeoutMs);
+    this.disconnectedPlayers.set(key, { player: { ...player }, gameId, timer });
+    game.players.delete(playerId);
+  }
+
+  rejoinPlayer(gameId: string, playerName: string, newSocketId: string): Player | undefined {
+    const key = `${gameId}:${playerName}`;
+    const entry = this.disconnectedPlayers.get(key);
+    if (!entry) return undefined;
+
+    const game = this.games.get(gameId);
+    if (!game) return undefined;
+
+    clearTimeout(entry.timer);
+    this.disconnectedPlayers.delete(key);
+
+    const player: Player = { ...entry.player, id: newSocketId };
+    game.players.set(newSocketId, player);
+    return player;
+  }
+
+  cancelDisconnect(gameId: string, playerName: string): void {
+    const key = `${gameId}:${playerName}`;
+    const entry = this.disconnectedPlayers.get(key);
+    if (entry) {
+      clearTimeout(entry.timer);
+      this.disconnectedPlayers.delete(key);
+    }
+  }
+
+  isDisconnected(gameId: string, playerName: string): boolean {
+    return this.disconnectedPlayers.has(`${gameId}:${playerName}`);
   }
 }

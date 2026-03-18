@@ -29,6 +29,7 @@ export interface Player {
   id: string;
   name: string;
   role: PlayerRole;
+  customRole: string | null;
   vote: string | null;
   hasVoted: boolean;
 }
@@ -38,6 +39,7 @@ export interface GameState {
   name: string;
   deck: CardDeck;
   deckType: string;
+  roles: string[];
   players: Player[];
   currentTopic: string;
   status: GameStatus;

@@ -13,6 +13,10 @@ export class SocketService implements OnDestroy {
 
     this.socket = io('/', {
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
   }
 
@@ -53,6 +57,16 @@ export class SocketService implements OnDestroy {
 
       return () => {
         this.socket?.off(event, handler);
+      };
+    });
+  }
+
+  onReconnect(): Observable<void> {
+    return new Observable<void>((subscriber) => {
+      const handler = () => subscriber.next();
+      this.socket?.io.on('reconnect', handler);
+      return () => {
+        this.socket?.io.off('reconnect', handler);
       };
     });
   }
