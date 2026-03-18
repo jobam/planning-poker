@@ -79,6 +79,25 @@
       </div>
     }
 
+    <!-- Voting role filter (admin only, when roles exist) -->
+    @if (isFacilitator() && (game()?.roles?.length ?? 0) > 0 && !isRevealed()) {
+      <div class="voting-roles-bar">
+        <span class="voting-roles-label">Voting roles:</span>
+        <div class="voting-roles-options">
+          @for (role of game()?.roles ?? []; track role) {
+            <label class="voting-role-checkbox">
+              <input
+                type="checkbox"
+                [checked]="game()?.votingRoles?.includes(role)"
+                (change)="toggleVotingRole(role)"
+              />
+              {{ role }}
+            </label>
+          }
+        </div>
+      </div>
+    }
+
     <!-- Controls bar -->
     <div class="controls-bar">
       <div class="controls-left">
@@ -92,29 +111,33 @@
         <app-timer />
       </div>
       <div class="controls-right">
-        <button
-          class="btn-spectator"
-          [class.active]="currentPlayer()?.role === 'spectator'"
-          (click)="toggleSpectator()"
-        >
-          {{ currentPlayer()?.role === 'spectator' ? 'Spectating' : 'Spectator' }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Card selection -->
-    <div class="card-selection">
-      <div class="card-row">
-        @for (value of game()?.deck?.values ?? []; track value) {
-          <app-poker-card
-            [value]="value"
-            [selected]="selectedCard() === value"
-            [disabled]="isRevealed() || currentPlayer()?.role === 'spectator'"
-            (cardClick)="selectCard(value)"
-          />
+        @if (!currentPlayer()?.isObserver) {
+          <button
+            class="btn-spectator"
+            [class.active]="currentPlayer()?.role === 'spectator'"
+            (click)="toggleSpectator()"
+          >
+            {{ currentPlayer()?.role === 'spectator' ? 'Spectating' : 'Spectator' }}
+          </button>
         }
       </div>
     </div>
+
+    <!-- Card selection (hidden for spectators and excluded roles) -->
+    @if (canVote()) {
+      <div class="card-selection">
+        <div class="card-row">
+          @for (value of game()?.deck?.values ?? []; track value) {
+            <app-poker-card
+              [value]="value"
+              [selected]="selectedCard() === value"
+              [disabled]="isRevealed()"
+              (cardClick)="selectCard(value)"
+            />
+          }
+        </div>
+      </div>
+    }
   </div>
 }
 

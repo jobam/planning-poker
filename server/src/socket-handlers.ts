@@ -137,6 +137,22 @@ export function registerSocketHandlers(io: Server, gameManager: GameManager): vo
       io.to(gameId).emit('topic-changed', { topic });
     });
 
+    socket.on('set-voting-roles', (data: { roles: string[] }) => {
+      const gameId = playerGameMap.get(socket.id);
+      if (!gameId) return;
+
+      if (!Array.isArray(data.roles)) return;
+
+      const roles = data.roles
+        .map((r) => sanitizeString(r, MAX_ROLE_LENGTH))
+        .filter((r): r is string => r !== null);
+
+      const gameDTO = gameManager.setVotingRoles(gameId, socket.id, roles);
+      if (!gameDTO) return;
+
+      io.to(gameId).emit('voting-roles-changed', { game: gameDTO });
+    });
+
     socket.on('rejoin-game', (data: { gameId: string; playerName: string; customRole?: string }, callback) => {
       const playerName = sanitizeString(data.playerName, MAX_NAME_LENGTH);
       if (!playerName) {

@@ -4,14 +4,14 @@
   <div class="relative">
     <div
       class="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg select-none"
-      [class.bg-indigo-600]="player().role === 'facilitator'"
-      [class.bg-gray-400]="player().role === 'player'"
-      [class.bg-gray-300]="player().role === 'spectator'"
+      [class.bg-indigo-600]="player().isAdmin"
+      [class.bg-gray-400]="!player().isAdmin && player().role === 'player'"
+      [class.bg-gray-300]="!player().isAdmin && player().role === 'spectator'"
     >
       {{ initials() }}
     </div>
 
-    @if (player().role === 'facilitator') {
+    @if (player().isAdmin) {
       <span class="absolute -top-1 -right-1 text-sm leading-none">👑</span>
     }
   </div>

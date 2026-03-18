@@ -21,6 +21,7 @@ export class GameManager {
       deck,
       deckType,
       roles,
+      votingRoles: [...roles],
       players: new Map(),
       currentTopic: '',
       status: 'voting',
@@ -54,7 +55,9 @@ export class GameManager {
     const player: Player = {
       id: socketId,
       name: playerName,
-      role: isFirstPlayer ? 'facilitator' : isObserver ? 'spectator' : 'player',
+      role: isObserver ? 'spectator' : isFirstPlayer ? 'facilitator' : 'player',
+      isAdmin: isFirstPlayer,
+      isObserver,
       customRole: isObserver ? null : customRole,
       vote: null,
       hasVoted: false,
@@ -71,6 +74,7 @@ export class GameManager {
     const player = game.players.get(playerId);
     if (!player) return false;
 
+    const wasAdmin = player.isAdmin;
     const wasFacilitator = player.role === 'facilitator';
     game.players.delete(playerId);
 
@@ -79,13 +83,16 @@ export class GameManager {
       return true;
     }
 
-    if (wasFacilitator) {
+    if (wasAdmin || wasFacilitator) {
       const nextPlayer = Array.from(game.players.values()).find((p) => p.role !== 'spectator');
       if (nextPlayer) {
         nextPlayer.role = 'facilitator';
+        nextPlayer.isAdmin = true;
       } else {
         const anyPlayer = Array.from(game.players.values())[0];
-        if (anyPlayer) anyPlayer.role = 'facilitator';
+        if (anyPlayer) {
+          anyPlayer.isAdmin = true;
+        }
       }
     }
 
@@ -98,6 +105,11 @@ export class GameManager {
 
     const player = game.players.get(playerId);
     if (!player || player.role === 'spectator') return false;
+
+    // If votingRoles filter is active, only allow players whose customRole is included
+    if (game.votingRoles.length > 0 && player.customRole && !game.votingRoles.includes(player.customRole)) {
+      return false;
+    }
 
     if (!game.deck.values.includes(value)) return false;
 
@@ -119,6 +131,7 @@ export class GameManager {
     if (!game || game.status !== 'revealed') return undefined;
 
     game.status = 'voting';
+    game.votingRoles = [...game.roles];
     for (const player of game.players.values()) {
       player.vote = null;
       player.hasVoted = false;
@@ -131,17 +144,29 @@ export class GameManager {
     if (!game) return undefined;
 
     const player = game.players.get(playerId);
-    if (!player) return undefined;
+    if (!player || player.isObserver) return undefined;
 
     if (player.role === 'spectator') {
-      player.role = 'player';
-    } else if (player.role !== 'facilitator') {
+      player.role = player.isAdmin ? 'facilitator' : 'player';
+    } else {
       player.role = 'spectator';
       player.vote = null;
       player.hasVoted = false;
     }
 
     return player;
+  }
+
+  setVotingRoles(gameId: string, playerId: string, votingRoles: string[]): GameStateDTO | undefined {
+    const game = this.games.get(gameId);
+    if (!game) return undefined;
+
+    const player = game.players.get(playerId);
+    if (!player || !player.isAdmin) return undefined;
+
+    // Only allow roles that exist in the game's role list
+    game.votingRoles = votingRoles.filter((r) => game.roles.includes(r));
+    return toGameDTO(game);
   }
 
   setTopic(gameId: string, topic: string): boolean {
