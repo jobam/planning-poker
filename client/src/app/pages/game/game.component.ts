@@ -102,6 +102,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   selectCard(value: string): void {
+    if (this.currentPlayer()?.role === 'spectator') return;
     this.selectedCard.set(value);
     this.gameService.vote(value);
   }

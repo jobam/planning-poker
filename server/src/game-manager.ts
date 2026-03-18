@@ -54,7 +54,9 @@ export class GameManager {
     const player: Player = {
       id: socketId,
       name: playerName,
-      role: isFirstPlayer ? 'facilitator' : isObserver ? 'spectator' : 'player',
+      role: isObserver ? 'spectator' : isFirstPlayer ? 'facilitator' : 'player',
+      isAdmin: isFirstPlayer,
+      isObserver,
       customRole: isObserver ? null : customRole,
       vote: null,
       hasVoted: false,
@@ -71,6 +73,7 @@ export class GameManager {
     const player = game.players.get(playerId);
     if (!player) return false;
 
+    const wasAdmin = player.isAdmin;
     const wasFacilitator = player.role === 'facilitator';
     game.players.delete(playerId);
 
@@ -79,13 +82,16 @@ export class GameManager {
       return true;
     }
 
-    if (wasFacilitator) {
+    if (wasAdmin || wasFacilitator) {
       const nextPlayer = Array.from(game.players.values()).find((p) => p.role !== 'spectator');
       if (nextPlayer) {
         nextPlayer.role = 'facilitator';
+        nextPlayer.isAdmin = true;
       } else {
         const anyPlayer = Array.from(game.players.values())[0];
-        if (anyPlayer) anyPlayer.role = 'facilitator';
+        if (anyPlayer) {
+          anyPlayer.isAdmin = true;
+        }
       }
     }
 
@@ -131,11 +137,11 @@ export class GameManager {
     if (!game) return undefined;
 
     const player = game.players.get(playerId);
-    if (!player) return undefined;
+    if (!player || player.isObserver) return undefined;
 
     if (player.role === 'spectator') {
-      player.role = 'player';
-    } else if (player.role !== 'facilitator') {
+      player.role = player.isAdmin ? 'facilitator' : 'player';
+    } else {
       player.role = 'spectator';
       player.vote = null;
       player.hasVoted = false;

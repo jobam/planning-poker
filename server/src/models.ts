@@ -29,6 +29,8 @@ export interface Player {
   id: string;
   name: string;
   role: PlayerRole;
+  isAdmin: boolean;
+  isObserver: boolean;
   customRole: string | null;
   vote: string | null;
   hasVoted: boolean;
@@ -61,6 +63,8 @@ export interface PlayerDTO {
   id: string;
   name: string;
   role: PlayerRole;
+  isAdmin: boolean;
+  isObserver: boolean;
   customRole: string | null;
   vote: string | null;
   hasVoted: boolean;
@@ -85,6 +89,8 @@ export function toPlayerDTO(player: Player, gameStatus: GameStatus): PlayerDTO {
     id: player.id,
     name: player.name,
     role: player.role,
+    isAdmin: player.isAdmin,
+    isObserver: player.isObserver,
     customRole: player.customRole,
     vote: gameStatus === 'revealed' ? player.vote : null,
     hasVoted: player.hasVoted,

@@ -29,6 +29,8 @@ export interface Player {
   id: string;
   name: string;
   role: PlayerRole;
+  isAdmin: boolean;
+  isObserver: boolean;
   customRole: string | null;
   vote: string | null;
   hasVoted: boolean;

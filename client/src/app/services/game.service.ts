@@ -20,7 +20,7 @@ export class GameService implements OnDestroy {
     return this.players().find((p) => p.id === id) ?? null;
   });
 
-  readonly isFacilitator = computed(() => this.currentPlayer()?.role === 'facilitator');
+  readonly isFacilitator = computed(() => this.currentPlayer()?.isAdmin === true);
 
   readonly isRevealed = computed(() => this.gameState()?.status === 'revealed');
 
