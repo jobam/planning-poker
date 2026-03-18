@@ -47,6 +47,7 @@ export class GameComponent implements OnInit, OnDestroy {
   allVoted = this.gameService.allVoted;
   voteStats = this.gameService.voteStats;
   currentPlayer = this.gameService.currentPlayer;
+  canVote = this.gameService.canVote;
 
   async ngOnInit(): Promise<void> {
     this.gameId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -102,7 +103,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   selectCard(value: string): void {
-    if (this.currentPlayer()?.role === 'spectator') return;
+    if (!this.canVote()) return;
     this.selectedCard.set(value);
     this.gameService.vote(value);
   }
@@ -118,6 +119,12 @@ export class GameComponent implements OnInit, OnDestroy {
 
   toggleSpectator(): void {
     this.gameService.toggleSpectator();
+  }
+
+  toggleVotingRole(role: string): void {
+    const current = this.game()?.votingRoles ?? [];
+    const updated = current.includes(role) ? current.filter((r) => r !== role) : [...current, role];
+    this.gameService.setVotingRoles(updated);
   }
 
   updateTopic(topic: string): void {

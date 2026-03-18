@@ -24,9 +24,24 @@ export class GameService implements OnDestroy {
 
   readonly isRevealed = computed(() => this.gameState()?.status === 'revealed');
 
+  readonly canVote = computed(() => {
+    const player = this.currentPlayer();
+    if (!player || player.role === 'spectator') return false;
+    const game = this.gameState();
+    if (!game || game.votingRoles.length === 0) return true;
+    if (!player.customRole) return true;
+    return game.votingRoles.includes(player.customRole);
+  });
+
   readonly allVoted = computed(() => {
+    const game = this.gameState();
     const players = this.players();
-    const voters = players.filter((p) => p.role !== 'spectator');
+    const votingRoles = game?.votingRoles ?? [];
+    const voters = players.filter((p) => {
+      if (p.role === 'spectator') return false;
+      if (votingRoles.length > 0 && p.customRole && !votingRoles.includes(p.customRole)) return false;
+      return true;
+    });
     return voters.length > 0 && voters.every((p) => p.hasVoted);
   });
 
@@ -161,6 +176,10 @@ export class GameService implements OnDestroy {
     this.socketService.emit('set-topic', { topic });
   }
 
+  setVotingRoles(roles: string[]): void {
+    this.socketService.emit('set-voting-roles', { roles });
+  }
+
   leaveGame(): void {
     this.teardownListeners();
     this.socketService.disconnect();
@@ -193,6 +212,9 @@ export class GameService implements OnDestroy {
         this.gameState.set(game);
       }),
       this.socketService.on<{ player: Player; game: GameState }>('player-updated').subscribe(({ game }) => {
+        this.gameState.set(game);
+      }),
+      this.socketService.on<{ game: GameState }>('voting-roles-changed').subscribe(({ game }) => {
         this.gameState.set(game);
       }),
       this.socketService.on<{ topic: string }>('topic-changed').subscribe(({ topic }) => {

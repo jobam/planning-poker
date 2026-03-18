@@ -42,6 +42,7 @@ export interface GameState {
   deck: CardDeck;
   deckType: string;
   roles: string[];
+  votingRoles: string[];
   players: Map<string, Player>;
   currentTopic: string;
   status: GameStatus;
@@ -54,6 +55,7 @@ export interface GameStateDTO {
   deck: CardDeck;
   deckType: string;
   roles: string[];
+  votingRoles: string[];
   players: PlayerDTO[];
   currentTopic: string;
   status: GameStatus;
@@ -78,6 +80,7 @@ export function toGameDTO(game: GameState): GameStateDTO {
     deck: game.deck,
     deckType: game.deckType,
     roles: game.roles,
+    votingRoles: game.votingRoles,
     players,
     currentTopic: game.currentTopic,
     status: game.status,

@@ -42,6 +42,7 @@ export interface GameState {
   deck: CardDeck;
   deckType: string;
   roles: string[];
+  votingRoles: string[];
   players: Player[];
   currentTopic: string;
   status: GameStatus;

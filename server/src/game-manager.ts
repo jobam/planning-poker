@@ -21,6 +21,7 @@ export class GameManager {
       deck,
       deckType,
       roles,
+      votingRoles: [...roles],
       players: new Map(),
       currentTopic: '',
       status: 'voting',
@@ -105,6 +106,11 @@ export class GameManager {
     const player = game.players.get(playerId);
     if (!player || player.role === 'spectator') return false;
 
+    // If votingRoles filter is active, only allow players whose customRole is included
+    if (game.votingRoles.length > 0 && player.customRole && !game.votingRoles.includes(player.customRole)) {
+      return false;
+    }
+
     if (!game.deck.values.includes(value)) return false;
 
     player.vote = value;
@@ -125,6 +131,7 @@ export class GameManager {
     if (!game || game.status !== 'revealed') return undefined;
 
     game.status = 'voting';
+    game.votingRoles = [...game.roles];
     for (const player of game.players.values()) {
       player.vote = null;
       player.hasVoted = false;
@@ -148,6 +155,18 @@ export class GameManager {
     }
 
     return player;
+  }
+
+  setVotingRoles(gameId: string, playerId: string, votingRoles: string[]): GameStateDTO | undefined {
+    const game = this.games.get(gameId);
+    if (!game) return undefined;
+
+    const player = game.players.get(playerId);
+    if (!player || !player.isAdmin) return undefined;
+
+    // Only allow roles that exist in the game's role list
+    game.votingRoles = votingRoles.filter((r) => game.roles.includes(r));
+    return toGameDTO(game);
   }
 
   setTopic(gameId: string, topic: string): boolean {
