@@ -45,11 +45,20 @@ export class GameComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.gameId = this.route.snapshot.paramMap.get('id') ?? '';
+
     try {
       const info = await this.gameService.getGameInfo(this.gameId);
       this.availableRoles.set(info.roles);
     } catch {
       // Game may not exist yet, will show error on join
+    }
+
+    // Auto-rejoin from session if available
+    const session = this.loadSession();
+    if (session && session.gameId === this.gameId) {
+      this.playerName.set(session.playerName);
+      this.selectedRole.set(session.customRole);
+      await this.joinGame();
     }
   }
 
@@ -61,14 +70,14 @@ export class GameComponent implements OnInit, OnDestroy {
     const name = this.playerName();
     if (!name.trim()) return;
 
-    localStorage.setItem('pp_player_name', name);
-
     try {
       await this.gameService.joinGame(this.gameId, name, this.selectedRole());
       this.joined.set(true);
       this.error.set('');
+      this.saveSession();
     } catch (err: unknown) {
       this.error.set(err instanceof Error ? err.message : 'Failed to join game');
+      this.clearSession();
     }
   }
 
@@ -96,5 +105,31 @@ export class GameComponent implements OnInit, OnDestroy {
 
   openInviteDialog(): void {
     this.showInviteDialog.set(true);
+  }
+
+  private saveSession(): void {
+    const data = {
+      gameId: this.gameId,
+      playerName: this.playerName(),
+      customRole: this.selectedRole(),
+    };
+    sessionStorage.setItem('pp_session', JSON.stringify(data));
+    localStorage.setItem('pp_player_name', this.playerName());
+  }
+
+  private loadSession(): { gameId: string; playerName: string; customRole: string | null } | null {
+    try {
+      const raw = sessionStorage.getItem('pp_session');
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (data.gameId && data.playerName) return data;
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private clearSession(): void {
+    sessionStorage.removeItem('pp_session');
   }
 }
