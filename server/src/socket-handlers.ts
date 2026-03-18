@@ -137,14 +137,80 @@ export function registerSocketHandlers(io: Server, gameManager: GameManager): vo
       io.to(gameId).emit('topic-changed', { topic });
     });
 
+    socket.on('rejoin-game', (data: { gameId: string; playerName: string; customRole?: string }, callback) => {
+      const playerName = sanitizeString(data.playerName, MAX_NAME_LENGTH);
+      if (!playerName) {
+        callback({ error: 'Invalid player name' });
+        return;
+      }
+
+      const game = gameManager.getGame(data.gameId);
+      if (!game) {
+        callback({ error: 'Game not found' });
+        return;
+      }
+
+      // Try to reclaim disconnected slot
+      const rejoined = gameManager.rejoinPlayer(data.gameId, playerName, socket.id);
+      if (rejoined) {
+        playerGameMap.set(socket.id, data.gameId);
+        socket.join(data.gameId);
+
+        const gameDTO = toGameDTO(game);
+        callback({ game: gameDTO, playerId: socket.id });
+
+        socket.to(data.gameId).emit('player-joined', {
+          player: toPlayerDTO(rejoined, game.status),
+          game: gameDTO,
+        });
+        return;
+      }
+
+      // No disconnected slot found — do a normal join
+      const customRole = data.customRole ? sanitizeString(data.customRole, MAX_ROLE_LENGTH) : null;
+      const player = gameManager.addPlayer(data.gameId, playerName, socket.id, customRole);
+      if (!player) {
+        callback({ error: 'Could not join game' });
+        return;
+      }
+
+      playerGameMap.set(socket.id, data.gameId);
+      socket.join(data.gameId);
+
+      const gameDTO = toGameDTO(game);
+      callback({ game: gameDTO, playerId: socket.id });
+
+      socket.to(data.gameId).emit('player-joined', {
+        player: toPlayerDTO(player, game.status),
+        game: gameDTO,
+      });
+    });
+
     socket.on('disconnect', () => {
       const gameId = playerGameMap.get(socket.id);
       if (!gameId) return;
 
-      gameManager.removePlayer(gameId, socket.id);
+      const game = gameManager.getGame(gameId);
+      const player = game?.players.get(socket.id);
+      const playerName = player?.name;
+
+      // Mark as disconnected with a grace period instead of removing immediately
+      gameManager.markDisconnected(gameId, socket.id, () => {
+        // Timer expired — player didn't reconnect, finalize removal
+        if (playerName) {
+          gameManager.cancelDisconnect(gameId, playerName);
+        }
+
+        // If no active players remain, clean up the game
+        const currentGame = gameManager.getGame(gameId);
+        if (currentGame && currentGame.players.size === 0) {
+          gameManager.removeGame(gameId);
+        }
+      });
+
       playerGameMap.delete(socket.id);
 
-      const game = gameManager.getGame(gameId);
+      // Notify other players that this player is temporarily disconnected
       if (game) {
         io.to(gameId).emit('player-left', {
           playerId: socket.id,

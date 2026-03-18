@@ -123,6 +123,24 @@ export class GameService implements OnDestroy {
     }
   }
 
+  async rejoinGame(gameId: string, playerName: string, customRole: string | null = null): Promise<void> {
+    this.listenToEvents();
+
+    const response = await this.socketService.emitWithAck<
+      { gameId: string; playerName: string; customRole?: string },
+      { game?: GameState; playerId?: string; error?: string }
+    >('rejoin-game', { gameId, playerName, ...(customRole ? { customRole } : {}) });
+
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    if (response.game && response.playerId) {
+      this.gameState.set(response.game);
+      this.currentPlayerId.set(response.playerId);
+    }
+  }
+
   vote(value: string): void {
     this.socketService.emit('submit-vote', { value });
   }

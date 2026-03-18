@@ -1,6 +1,8 @@
 import { Component, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { SocketService } from '../../services/socket.service';
 import { GameService } from '../../services/game.service';
 import { PokerCardComponent } from '../../components/poker-card/poker-card.component';
 import { PlayerCardComponent } from '../../components/player-card/player-card.component';
@@ -24,7 +26,10 @@ import { InviteDialogComponent } from '../../components/invite-dialog/invite-dia
 export class GameComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private socketService = inject(SocketService);
   protected gameService = inject(GameService);
+
+  private reconnectSub: Subscription | null = null;
 
   gameId = '';
   playerName = signal(localStorage.getItem('pp_player_name') ?? '');
@@ -60,9 +65,24 @@ export class GameComponent implements OnInit, OnDestroy {
       this.selectedRole.set(session.customRole);
       await this.joinGame();
     }
+
+    // On socket reconnection (e.g. phone lock/unlock), rejoin automatically
+    this.reconnectSub = this.socketService.onReconnect().subscribe(() => {
+      const s = this.loadSession();
+      if (s && s.gameId === this.gameId && this.joined()) {
+        this.gameService
+          .rejoinGame(this.gameId, s.playerName, s.customRole)
+          .catch(() => {
+            // Rejoin failed — session may have expired, force re-join
+            this.joined.set(false);
+            this.clearSession();
+          });
+      }
+    });
   }
 
   ngOnDestroy(): void {
+    this.reconnectSub?.unsubscribe();
     this.gameService.leaveGame();
   }
 
